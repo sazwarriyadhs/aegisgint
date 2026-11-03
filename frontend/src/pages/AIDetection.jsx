@@ -22,6 +22,9 @@ const AIDetection = () => {
   const [history, setHistory] = useState([]);
   const [previewImage, setPreviewImage] = useState(SAMPLE_IMAGE);
   const [isAutoMode, setIsAutoMode] = useState(true);
+  const [isTracking, setIsTracking] = useState(false);
+  const [trackingTarget, setTrackingTarget] = useState(null);
+  const [droneDistance, setDroneDistance] = useState(0);
   const [scanEffect, setScanEffect] = useState(false);
   const [detections, setDetections] = useState([]);
   const fileInputRef = useRef(null);
@@ -105,6 +108,17 @@ const AIDetection = () => {
         }
 
         setDetections(newDets);
+
+        // LOGIKA AUTO-TRACKING
+        if (isTracking) {
+          // Pilih target pertama yang terdeteksi sebagai 'drone lock'
+          const primaryTarget = newDets.find(d => d.class === 'Person');
+          if (primaryTarget) {
+            setTrackingTarget(primaryTarget);
+            // Simulasi jarak drone makin deket
+            setDroneDistance(prev => Math.max(50, prev - Math.random() * 100));
+          }
+        }
         setMovement({ status: 'DETECTED', count: personCount, weapons: currentWeapons.length, lastEvent: now.toLocaleTimeString() });
 
         const minT = (30 + Math.random() * 2).toFixed(1);
@@ -203,7 +217,18 @@ const AIDetection = () => {
       </div>
 
       <div style={st.panel}>
-        <div style={st.panelTitle}><Target size={14} /> Live Feed Analysis</div>
+        <div style={st.panelTitle}>
+          <Target size={14} /> Live Feed Analysis 
+          {isTracking && <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#22c55e', display: 'flex', alignItems: 'center', gap: '4px', animation: 'blink-red 1s infinite' }}>● TARGET LOCKED (DIST: {Math.round(droneDistance)}m)</span>}
+        </div>
+        <div style={{ marginBottom: '12px' }}>
+          <button 
+            style={{ padding: '6px 12px', background: isTracking ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)', color: isTracking ? '#22c55e' : '#8899aa', border: '1px solid ' + (isTracking ? '#22c55e' : 'rgba(255,255,255,0.1)'), borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 700 }}
+            onClick={() => setIsTracking(!isTracking)}
+          >
+            {isTracking ? '🛑 Stop Auto-Track' : '🎯 Start Auto-Track (Drone AI)'}
+          </button>
+        </div>
         <div style={st.grid2}>
           <div>
             <div style={st.camBox}>
@@ -212,8 +237,12 @@ const AIDetection = () => {
               {previewImage ? (
                 <>
                   <img src={previewImage} alt="RGB" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
-                  {detections.map(det => (
-                    <div key={det.id} style={{ ...st.bbox(det.color), left: `${det.x}%`, top: `${det.y}%`, width: `${det.w}%`, height: `${det.h}%` }}>
+                  <div key={det.id} style={{ 
+                      ...st.bbox(isTracking && trackingTarget?.id === det.id ? '#eab308' : det.color), 
+                      left: \\%\, top: \\%\, width: \\%\, height: \\%\,
+                      boxShadow: isTracking && trackingTarget?.id === det.id ? '0 0 20px #eab308' : 'none',
+                      transition: 'all 0.2s'
+                    }}>
                       <span style={st.bboxLabel(det.color)}>{det.class} {det.confidence}% {det.temp ? `| ${det.temp}°C (${det.status})` : ""}</span>
                     </div>
                   ))}
@@ -333,4 +362,5 @@ const AIDetection = () => {
 };
 
 export default AIDetection;
+
 
