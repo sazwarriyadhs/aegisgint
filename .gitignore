@@ -34,3 +34,7 @@ geoserver/data/*
 !geoserver/data/.gitkeep
 tmp/
 temp/
+frontend/public/papua_drone_sample.jpg
+
+# Refact tool cache
+.refact/
