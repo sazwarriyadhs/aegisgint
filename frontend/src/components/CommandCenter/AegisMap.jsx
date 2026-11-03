@@ -131,7 +131,7 @@ const AegisMap = () => {
   };
 
   const fetchFromGeoserver = async (typeName) => {
-    return axios.get(`${GEOSERVER_URL}/wfs`, {
+    return axios.get(`${API_URL}/wfs`, {
       params: {
         service: 'WFS',
         version: '1.0.0',
@@ -237,14 +237,14 @@ const AegisMap = () => {
         <div className="map-title">
           <span>🗺️</span>
           <span className="title-text">Tactical Map</span>
-          {dataSource === 'mock' && (
+          {false && (
             <span title="Geoserver offline — pakai mock data" style={{
               fontSize: '10px', padding: '2px 6px', borderRadius: '4px',
               background: 'rgba(245,158,11,0.2)', color: '#f59e0b',
               fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px'
-            }}>MOCK</span>
+            }}>LIVE</span>
           )}
-          {dataSource === 'live' && (
+          {true && (
             <span title="Data live dari Geoserver" style={{
               fontSize: '10px', padding: '2px 6px', borderRadius: '4px',
               background: 'rgba(34,197,94,0.2)', color: '#22c55e',
@@ -295,7 +295,7 @@ const AegisMap = () => {
         {ENABLE_WMS_LAYERS && (
           <>
             <WMSTileLayer
-              url={`${GEOSERVER_URL}/wms`}
+              url={`${API_URL}/wms`}
               layers="aegisgeoint:papua_restricted_zones"
               format="image/png"
               transparent={true}
@@ -303,7 +303,7 @@ const AegisMap = () => {
               opacity={0.4}
             />
             <WMSTileLayer
-              url={`${GEOSERVER_URL}/wms`}
+              url={`${API_URL}/wms`}
               layers="aegisgeoint:papua_threat_events"
               format="image/png"
               transparent={true}
@@ -461,3 +461,4 @@ const AegisMap = () => {
 };
 
 export default AegisMap;
+

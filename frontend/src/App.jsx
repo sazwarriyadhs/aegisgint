@@ -25,10 +25,12 @@ import ThreatMap from './pages/ThreatMap';
 import Analytics from './pages/Analytics';
 import ScenarioSimulator from './pages/ScenarioSimulator';
 import AIDetection from './pages/AIDetection';
+import Login from './pages/Login';
 import TacticalAnalysis from './pages/TacticalAnalysis';
 
 const App = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [isAuth, setIsAuth] = React.useState(() => localStorage.getItem('aegis_auth') === 'true');
   const location = useLocation();
 
   const navLinks = [
@@ -106,7 +108,12 @@ const App = () => {
 
       <main className="main-content">
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/login" element={<Login setIsAuth={setIsAuth} />} />
+          {!isAuth ? (
+            <Route path="*" element={<Login setIsAuth={setIsAuth} />} />
+          ) : (
+            <>
+              <Route path="/" element={<Dashboard />} />
           <Route path="/fleet" element={<DroneFleet />} />
           <Route path="/missions" element={<MissionControl />} />
           <Route path="/intel" element={<IntelligenceCenter />} />
@@ -116,6 +123,9 @@ const App = () => {
           <Route path="/scenarios" element={<ScenarioSimulator />} />
           <Route path="/ai-detection" element={<AIDetection />} />
           <Route path="/tactical" element={<TacticalAnalysis />} />
+            </>
+          )}
+
         </Routes>
       </main>
 
@@ -173,6 +183,7 @@ const AppWrapper = () => {
 };
 
 export default AppWrapper;
+
 
 
 

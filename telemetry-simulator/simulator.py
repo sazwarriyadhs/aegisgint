@@ -83,7 +83,7 @@ class DroneSimulator:
             drone['route_idx'] = idx
             drone['route_progress'] = progress
 
-            drone['battery'] -= 0.02
+            drone['battery'] -= 0.005
             drone['alt'] += (random.random() - 0.5) * 3
             drone['heading'] = (drone['heading'] + (random.random() - 0.5) * 10) % 360
             drone['speed'] = max(10, min(40, drone['speed'] + (random.random() - 0.5) * 2))
@@ -164,5 +164,6 @@ if __name__ == '__main__':
         asyncio.run(sim.run())
     except KeyboardInterrupt:
         print('\n[STOP] Simulator stopped!')
+
 
 
