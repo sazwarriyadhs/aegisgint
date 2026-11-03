@@ -214,7 +214,7 @@ const AIDetection = () => {
                   <img src={previewImage} alt="RGB" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
                   {detections.map(det => (
                     <div key={det.id} style={{ ...st.bbox(det.color), left: `${det.x}%`, top: `${det.y}%`, width: `${det.w}%`, height: `${det.h}%` }}>
-                      <span style={st.bboxLabel(det.color)}>{det.class} {det.confidence}%</span>
+                      <span style={st.bboxLabel(det.color)}>{det.class} {det.confidence}% {det.temp ? `| ${det.temp}°C (${det.status})` : ""}</span>
                     </div>
                   ))}
                   {movement.status === 'SCANNING' && (
@@ -333,3 +333,4 @@ const AIDetection = () => {
 };
 
 export default AIDetection;
+
