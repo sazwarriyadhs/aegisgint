@@ -14,6 +14,7 @@ const AIDetection = () => {
   const [error, setError] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
   const [previewFile, setPreviewFile] = useState(null);
+  const [selectedCapture, setSelectedCapture] = useState(null);
   const fileInputRef = useRef(null);
 
   const checkHealth = async () => {
@@ -148,6 +149,97 @@ const AIDetection = () => {
     fileInput: { display: 'none' }
   };
 
+  // ============ MODAL DETAIL ============
+  const modalOverlay = {
+    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+    background: 'rgba(0,0,0,0.85)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    zIndex: 9999, padding: '20px',
+    backdropFilter: 'blur(4px)'
+  };
+
+  const modalContent = {
+    background: '#0a0e1a',
+    border: '2px solid #4fc3f7',
+    borderRadius: '12px',
+    maxWidth: '700px',
+    width: '100%',
+    maxHeight: '90vh',
+    overflow: 'auto',
+    color: '#e0e8f0',
+    fontFamily: 'monospace'
+  };
+
+  const modalHeader = {
+    padding: '16px 20px',
+    background: 'linear-gradient(90deg, rgba(79,195,247,0.15), rgba(239,68,68,0.15))',
+    borderBottom: '1px solid rgba(79,195,247,0.3)',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  };
+
+  const modalTitle = {
+    fontSize: '14px', fontWeight: 700, color: '#4fc3f7',
+    textTransform: 'uppercase', letterSpacing: '1.5px', margin: 0
+  };
+
+  const modalClose = {
+    background: 'transparent', border: 'none', color: '#8899aa',
+    fontSize: '24px', cursor: 'pointer', padding: '0 8px',
+    lineHeight: 1
+  };
+
+  const modalBody = {
+    padding: '20px'
+  };
+
+  const infoRow = {
+    display: 'flex', justifyContent: 'space-between',
+    padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)',
+    fontSize: '13px'
+  };
+
+  const infoLabel = {
+    color: '#8899aa', textTransform: 'uppercase',
+    fontSize: '11px', letterSpacing: '1px'
+  };
+
+  const infoValue = {
+    color: '#e0e8f0', fontWeight: 600,
+    fontFamily: 'monospace'
+  };
+
+  const sectionHeader = {
+    fontSize: '12px', fontWeight: 700, color: '#4fc3f7',
+    textTransform: 'uppercase', letterSpacing: '1.5px',
+    marginTop: '20px', marginBottom: '10px',
+    paddingBottom: '6px', borderBottom: '1px solid rgba(79,195,247,0.3)'
+  };
+
+  const modalActions = {
+    display: 'flex', gap: '8px', padding: '16px 20px',
+    borderTop: '1px solid rgba(255,255,255,0.06)',
+    background: 'rgba(0,0,0,0.3)',
+    flexWrap: 'wrap'
+  };
+
+  const modalBtn = (color) => ({
+    flex: 1, minWidth: '150px',
+    padding: '10px 16px',
+    background: `${color}20`, color: color,
+    border: `1px solid ${color}`, borderRadius: '6px',
+    cursor: 'pointer', fontSize: '12px', fontWeight: 700,
+    textTransform: 'uppercase', letterSpacing: '0.5px',
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+  });
+
+  const thermalBox = {
+    padding: '12px', background: 'rgba(239,68,68,0.05)',
+    border: '1px solid rgba(239,68,68,0.3)',
+    borderRadius: '6px', marginBottom: '10px'
+  };
+
   return (
     <div style={st.container}>
       <div style={st.header}>
@@ -253,7 +345,7 @@ const AIDetection = () => {
         ) : (
           <div style={st.captureGrid}>
             {captures.map((cap, i) => (
-              <div key={cap.id} style={st.captureCard}>
+              <div key={cap.id} style={{...st.captureCard, cursor: 'pointer'}} onClick={() => setSelectedCapture(cap)} title="Click to view detail">
                 <div style={st.captureImg}>{cap.objects?.length || 0}</div>
                 <div style={st.captureInfo}>
                   <div><strong>OBJECT {String(i + 1).padStart(3, '0')}</strong></div>
@@ -332,8 +424,108 @@ const AIDetection = () => {
           <Download size={14} /> Export Report
         </button>
       </div>
+
+      {/* ============ MODAL DETAIL CAPTURE ============ */}
+      {selectedCapture && (
+        <div style={modalOverlay} onClick={() => setSelectedCapture(null)}>
+          <div style={modalContent} onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div style={modalHeader}>
+              <h2 style={modalTitle}>OBJECT CAPTURE DETAIL</h2>
+              <button style={modalClose} onClick={() => setSelectedCapture(null)}>×</button>
+            </div>
+
+            {/* Body */}
+            <div style={modalBody}>
+              <div style={infoRow}><span style={infoLabel}>Event ID</span><span style={infoValue}>{selectedCapture.id}</span></div>
+              <div style={infoRow}><span style={infoLabel}>Capture Time</span><span style={infoValue}>{new Date(selectedCapture.timestamp).toLocaleString()}</span></div>
+              <div style={infoRow}><span style={infoLabel}>Sensor</span><span style={infoValue}>RGB / THERMAL</span></div>
+              <div style={infoRow}><span style={infoLabel}>Object Class</span><span style={infoValue}>{selectedCapture.objects?.length > 0 ? `${selectedCapture.objects.length} detected` : 'UNCLASSIFIED'}</span></div>
+              <div style={infoRow}>
+                <span style={infoLabel}>Detection</span>
+                <span style={{...infoValue, color: selectedCapture.objects?.length > 0 ? '#22c55e' : '#f59e0b'}}>
+                  {selectedCapture.objects?.length > 0 ? '✅ DETECTED' : '⚠️ REVIEW REQUIRED'}
+                </span>
+              </div>
+
+              {/* Image */}
+              <div style={sectionHeader}>IMAGE METADATA</div>
+              <div style={{ padding: '20px', background: 'rgba(79,195,247,0.05)', border: '1px solid rgba(79,195,247,0.3)', borderRadius: '6px', textAlign: 'center', marginBottom: '10px' }}>
+                <div style={{ fontSize: '32px', fontWeight: 700, color: '#4fc3f7', marginBottom: '4px' }}>
+                  {selectedCapture.objects?.length || 0}
+                </div>
+                <div style={{ fontSize: '11px', color: '#8899aa', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  Objects Detected
+                </div>
+                {selectedCapture.path && (
+                  <div style={{ marginTop: '10px', fontSize: '10px', color: '#4fc3f7', fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                    {selectedCapture.path.split('/').pop()}
+                  </div>
+                )}
+              </div>
+
+              {/* Objects List */}
+              {selectedCapture.objects?.length > 0 && (
+                <>
+                  <div style={sectionHeader}>DETECTED OBJECTS</div>
+                  {selectedCapture.objects.map((obj, i) => (
+                    <div key={i} style={infoRow}>
+                      <span style={infoLabel}>{obj.class}</span>
+                      <span style={infoValue}>
+                        {(obj.confidence * 100).toFixed(1)}% — bbox [{obj.bbox?.join(', ')}]
+                      </span>
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {/* Thermal */}
+              <div style={sectionHeader}>THERMAL DATA</div>
+              <div style={thermalBox}>
+                <div style={infoRow}><span style={infoLabel}>Minimum</span><span style={infoValue}>-- °C</span></div>
+                <div style={infoRow}><span style={infoLabel}>Maximum</span><span style={infoValue}>-- °C</span></div>
+                <div style={infoRow}><span style={infoLabel}>Average</span><span style={infoValue}>-- °C</span></div>
+                <div style={infoRow}><span style={infoLabel}>Calibration</span><span style={{...infoValue, color: '#f59e0b'}}>NOT VERIFIED</span></div>
+              </div>
+
+              {/* Geolocation */}
+              <div style={sectionHeader}>GEOLOCATION</div>
+              <div style={infoRow}><span style={infoLabel}>Latitude</span><span style={infoValue}>--</span></div>
+              <div style={infoRow}><span style={infoLabel}>Longitude</span><span style={infoValue}>--</span></div>
+              <div style={infoRow}><span style={infoLabel}>GPS Accuracy</span><span style={infoValue}>--</span></div>
+            </div>
+
+            {/* Actions */}
+            <div style={modalActions}>
+              <button style={modalBtn('#4fc3f7')} onClick={() => {
+                alert(`Event ID: ${selectedCapture.id}\nObjects: ${selectedCapture.objects?.length || 0}\nTime: ${new Date(selectedCapture.timestamp).toLocaleString()}`);
+              }}>
+                👁️ View Event
+              </button>
+              <button style={modalBtn('#22c55e')} onClick={() => {
+                const data = JSON.stringify(selectedCapture, null, 2);
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `capture_${selectedCapture.id}.json`;
+                a.click();
+              }}>
+                ⬇️ Export Metadata
+              </button>
+              <button style={modalBtn('#f59e0b')} onClick={() => {
+                alert(`Event ${selectedCapture.id} marked for review`);
+                setSelectedCapture(null);
+              }}>
+                ⚠️ Mark for Review
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default AIDetection;
+

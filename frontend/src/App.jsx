@@ -25,6 +25,7 @@ import ThreatMap from './pages/ThreatMap';
 import Analytics from './pages/Analytics';
 import ScenarioSimulator from './pages/ScenarioSimulator';
 import AIDetection from './pages/AIDetection';
+import TacticalAnalysis from './pages/TacticalAnalysis';
 
 const App = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -40,6 +41,7 @@ const App = () => {
     { path: '/analytics', icon: <BarChart3 size={20} />, label: 'Analytics' },
     { path: '/scenarios', icon: <Swords size={20} />, label: 'Scenarios' },
     { path: '/ai-detection', icon: <Camera size={20} />, label: 'AI Detection' },
+    { path: '/tactical', icon: <Crosshair size={20} />, label: 'Tactical Analysis' },
   ];
 
   return (
@@ -113,6 +115,7 @@ const App = () => {
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/scenarios" element={<ScenarioSimulator />} />
           <Route path="/ai-detection" element={<AIDetection />} />
+          <Route path="/tactical" element={<TacticalAnalysis />} />
         </Routes>
       </main>
 
@@ -170,6 +173,7 @@ const AppWrapper = () => {
 };
 
 export default AppWrapper;
+
 
 
 
