@@ -31,9 +31,9 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Create symbolic links
-RUN ln -s /usr/bin/python3.10 /usr/bin/python && \
-    ln -s /usr/bin/python3.10 /usr/bin/python3
+# Create symbolic links (2 baris terpisah, no backtick)
+RUN ln -sf /usr/bin/python3.10 /usr/bin/python || true
+RUN ln -sf /usr/bin/python3.10 /usr/bin/python3 || true
 
 # Set working directory
 WORKDIR /app
@@ -62,9 +62,6 @@ COPY . .
 
 # Create necessary directories
 RUN mkdir -p models/pretrained models/trained data logs uploads
-
-# Download default models (if needed)
-# RUN python -c "from ultralytics import YOLO; YOLO('yolov8x.pt')"
 
 # Set permissions
 RUN chmod +x main.py

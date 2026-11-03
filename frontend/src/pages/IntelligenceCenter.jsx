@@ -81,7 +81,7 @@ const IntelligenceCenter = () => {
 
       // Fetch threats from GeoServer
       const threatsRes = await axios.get(
-        'http://localhost:8089/geoserver/wfs',
+        'http://localhost:5000/wfs',
         {
           params: {
             service: 'WFS',
@@ -114,7 +114,7 @@ const IntelligenceCenter = () => {
 
       // Fetch tracked objects
       const objectsRes = await axios.get(
-        'http://localhost:8089/geoserver/wfs',
+        'http://localhost:5000/wfs',
         {
           params: {
             service: 'WFS',
@@ -134,7 +134,7 @@ const IntelligenceCenter = () => {
 
       // Fetch sensors
       const sensorsRes = await axios.get(
-        'http://localhost:8089/geoserver/wfs',
+        'http://localhost:5000/wfs',
         {
           params: {
             service: 'WFS',
@@ -154,7 +154,7 @@ const IntelligenceCenter = () => {
 
       // Fetch restricted zones
       const zonesRes = await axios.get(
-        'http://localhost:8089/geoserver/wfs',
+        'http://localhost:5000/wfs',
         {
           params: {
             service: 'WFS',
@@ -482,18 +482,16 @@ const IntelligenceCenter = () => {
                   attribution='&copy; OSM'
                 />
 
-                {intelData.analytics.hotspots.map((spot, index) => {
-                  const coords = HOTSPOT_COORDINATES[spot];
-                  if (!coords) return null;
-                  const threatCount = intelData.analytics.hotspotCounts?.[spot] || Math.floor(Math.random() * 8 + 2);
-                  const severity = threatCount > 5 ? 'High' : threatCount > 3 ? 'Medium' : 'Low';
+                {intelData.threats.map((threat, index) => {
+                  if (!threat.lat || !threat.lng) return null;
+                  const severity = threat.severity || 'Low';
                   const color = severity === 'High' ? '#ef5350' : severity === 'Medium' ? '#f59e0b' : '#4caf50';
-                  const isSelected = selectedHotspot === spot;
+                  const isSelected = selectedHotspot === threat.location;
 
                   return (
-                    <>
+                    <React.Fragment key={`threat-${threat.id}-${index}`}>
                       <Circle
-                        center={coords}
+                        center={[threat.lat, threat.lng]}
                         radius={isSelected ? 25000 : 20000}
                         pathOptions={{
                           color: color,
@@ -504,27 +502,27 @@ const IntelligenceCenter = () => {
                         }}
                       />
                       <Marker
-                        position={coords}
+                        position={[threat.lat, threat.lng]}
                         icon={hotspotIcon}
-                        eventHandlers={{ click: () => handleHotspotClick(spot) }}
+                        eventHandlers={{ click: () => handleHotspotClick(threat.location) }}
                       >
                         <Popup>
-                          <div style={{ minWidth: '180px' }}>
-                            <strong style={{ color: '#ef5350' }}>🔥 {spot}</strong>
-                            <br /><span>Active Threats: <strong>{threatCount}</strong></span>
+                          <div style={{ minWidth: '200px' }}>
+                            <strong style={{ color: color }}>⚠️ {threat.type}</strong>
+                            <br /><span>📍 {threat.location}</span>
                             <br /><span>Severity: <strong style={{ color }}>{severity}</strong></span>
-                            <button className="popup-action-btn" onClick={() => handleHotspotClick(spot)}>
-                              <Eye size={14} /> View Threats
-                            </button>
+                            <br /><span>Status: {threat.status}</span>
+                            <br /><span>Time: {threat.time}</span>
+                            <br /><span>Coords: {threat.lat.toFixed(4)}, {threat.lng.toFixed(4)}</span>
                           </div>
                         </Popup>
                         <Tooltip permanent={isSelected} direction="top" offset={[0, -20]}>
                           <div style={{ background: isSelected ? 'rgba(239,83,80,0.9)' : 'rgba(0,0,0,0.8)', color: 'white', padding: '4px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>
-                            {spot} 🔥 {threatCount}
+                            {threat.location} ⚠️ {severity}
                           </div>
                         </Tooltip>
                       </Marker>
-                    </>
+                    </React.Fragment>
                   );
                 })}
               </MapContainer>
@@ -722,3 +720,5 @@ const IntelligenceCenter = () => {
 };
 
 export default IntelligenceCenter;
+
+

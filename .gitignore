@@ -1,48 +1,36 @@
-# Large files - SKIP SEMUA YANG BESAR!
-database/spatial/
-*.gpkg
-*.shp
-*.tif
-*.geojson
-
-# Models
-*.pkl
-*.h5
+node_modules/
+__pycache__/
+*.py[cod]
+venv/
+dist/
+build/
+.vite/
+.env
+.env.local
+logs/
+*.log
+uploads/
+backend/uploads/
+backend/logs/
+ai-engine/uploads/
+ai-engine/logs/
+ai-engine/data/
 *.pt
 *.pth
 *.onnx
-*.safetensors
-models/
-
-# Images
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.mp4
-*.avi
-*.mov
-
-# Dependencies
-node_modules/
-__pycache__/
-*.pyc
-*.pyo
-
-# Logs
-logs/
-*.log
-*.tmp
-
-# Uploads
-uploads/
+*.pkl
+*.bak
+*.bak2
+*.bak3
+*.bak4
+*.bak_*
+.archive/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+geoserver/data_old/
+geoserver/data/*
+!geoserver/data/.gitkeep
+tmp/
 temp/
-
-# Build
-dist/
-build/
-*.war
-
-# Environment
-.env
-.env.*

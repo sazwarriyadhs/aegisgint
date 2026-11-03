@@ -1,265 +1,86 @@
-# AEGIS GEOINT
+﻿# ðŸ›°ï¸ AEGIS GEOINT
 
-## Autonomous Geospatial Intelligence & ISR Platform
+**Tropical UAV Intelligence & Drone Command Center**
 
-AEGIS GEOINT is an advanced autonomous surveillance and geospatial intelligence platform designed for real-time monitoring, threat detection, mission planning, and tactical situational awareness.
+A full-stack geospatial intelligence platform for drone surveillance, AI-powered object detection, and tactical mission planning.
 
-The platform combines AI-powered computer vision, drone telemetry, spatial intelligence, autonomous navigation, and geospatial analytics into a unified command center architecture.
+## ðŸŽ¯ Features
 
-Core objective:
+- ðŸ—ºï¸ Interactive Tactical Map
+- ðŸ›¸ Drone Fleet Management (8 drones live)
+- ðŸŽ¯ Mission Control
+- ðŸ§  Intelligence Center
+- ðŸŽ¯ Enemy Intel
+- ðŸ—ºï¸ Threat Map
+- ðŸ“Š Analytics Dashboard
+- âš”ï¸ Scenario Simulator
+- ðŸ“· AI Detection Console (YOLOv8)
+- ðŸ›°ï¸ GeoServer WMS/WFS
 
-- Autonomous Intelligence Surveillance Reconnaissance (ISR)
-- Tactical Monitoring and Threat Detection
-- Drone-based Autonomous Patrol
-- Real-Time Geospatial Intelligence Processing
-- Mission Planning and Route Optimization
-- Critical Infrastructure Monitoring
-- Environmental Monitoring and Disaster Response
+## ðŸ—ï¸ Architecture
 
----
+Frontend (React+Vite) â†’ Backend (Node.js) â†’ AI Engine (Python FastAPI) â†’ Docker (Postgres, Redis, GeoServer)
 
-# Core Technology Stack
+## ðŸš€ Quick Start
 
-Flight Control & Robotics
+### 1. Clone
+git clone https://github.com/sazwarriyadhs/aegisgint.git
+cd aegisgint
 
-- :contentReference[oaicite:0]{index=0}
-- :contentReference[oaicite:1]{index=1}
-- MAVLink Protocol
+### 2. Config
+cp .env.example .env
 
-Artificial Intelligence Engine
+### 3. Start Infrastructure
+docker-compose up -d postgres redis backend geoserver
 
-- YOLO Object Detection
-- GroundingDINO Zero-Shot Detection
-- Segment Anything Model (SAM)
-- DeepSORT Multi Object Tracking
-- Behavior Analysis Engine
-- Threat Classification Engine
-- Anomaly Detection Engine
+### 4. Start Telemetry Simulator
+cd telemetry-simulator
+pip install -r requirements.txt
+python simulator.py
 
-Geospatial Intelligence Stack
+### 5. Start Frontend
+cd frontend
+npm install
+npm run dev
 
-- :contentReference[oaicite:2]{index=2}
-- :contentReference[oaicite:3]{index=3}
-- :contentReference[oaicite:4]{index=4}
-- DEM Terrain Analysis
-- Geofence Engine
-- Spatial Query Processing
-- Route Optimization Engine
+### 6. Open
+- Frontend: http://localhost:5173
+- Backend: http://localhost:5000
+- AI Engine: http://localhost:8000/docs
+- GeoServer: http://localhost:8089/geoserver/web/
 
-Application Layer
+## ðŸ”§ Services
 
-- :contentReference[oaicite:5]{index=5}
-- WebSocket Real-Time Communication
-- :contentReference[oaicite:6]{index=6} Tactical Dashboard
-- Command Center Interface
+| Service | Port |
+|---------|------|
+| Frontend | 5173 |
+| Backend | 5000 |
+| AI Engine | 8000 |
+| Telemetry | 8765 |
+| Postgres | 5432 |
+| Redis | 6379 |
+| GeoServer | 8089 |
 
-Infrastructure
+## ðŸ§ª API
 
-- Docker Containers
-- GPU Accelerated Inference
-- Distributed Processing Architecture
-- Real-Time Video Streaming Pipeline
+Backend:
+- GET /api/drones
+- GET /api/threats
+- GET /api/sensors
+- GET /api/zones
+- GET /api/enemy
+- GET /wfs
 
----
+AI Engine:
+- GET /health
+- POST /detect/movement
+- POST /detect/thermal
+- GET /history
 
-# System Architecture
+## ðŸ‘¤ Author
 
-Drone Sensor Layer
+Sazwar Riyadh â€” @sazwarriyadhs
 
-- Optical Camera
-- Thermal Camera
-- GPS
-- IMU Sensor
-- Altitude Sensor
+## ðŸ“ License
 
-                ↓
-
-Telemetry Processing Layer
-
-- MAVLink Parser
-- Drone State Monitoring
-- GPS Listener
-- Sensor Fusion Engine
-
-                ↓
-
-AI Detection Engine
-
-- YOLO Detection
-- GroundingDINO Detection
-- SAM Segmentation
-- Weapon Detection
-
-                ↓
-
-Tracking Engine
-
-- DeepSORT Tracking
-- Vehicle Tracking
-- Persistent Target Tracking
-- Movement Prediction
-
-                ↓
-
-Intelligence Layer
-
-- Threat Classification
-- Behavior Analysis
-- Intrusion Detection
-- Anomaly Detection
-- Threat Scoring
-
-                ↓
-
-Spatial Intelligence Layer
-
-- Coordinate Extraction
-- Geofence Analysis
-- DEM Terrain Analysis
-- Route Optimization
-- Spatial Correlation Engine
-
-                ↓
-
-Spatial Database Layer
-
-- Asset Storage
-- Threat Event Storage
-- Mission Database
-- Spatial Query Engine
-
-                ↓
-
-Map Server Layer
-
-- GeoServer Tile Rendering
-- Satellite Layer
-- Tactical Layer Rendering
-- Heatmap Visualization
-
-                ↓
-
-Command Center Dashboard
-
-- Tactical Map Visualization
-- Real-Time Drone Monitoring
-- Threat Alert System
-- Mission Control Panel
-- Autonomous Patrol Monitoring
-
----
-
-# Operational Capabilities
-
-The AEGIS GEOINT platform supports:
-
-🚁 Autonomous Drone Patrol
-
-🛰 Satellite and Aerial Mapping
-
-🌊 Flood Monitoring and Early Warning
-
-🌋 Volcano Activity Monitoring
-
-🌲 Deforestation Detection
-
-🚗 Vehicle Tracking and Monitoring
-
-🏠 New Building Detection
-
-🔥 Wildfire and Hotspot Detection
-
-🛥 Maritime Vessel Monitoring
-
-📍 Autonomous Route Planning using DEM and Terrain Analysis
-
----
-
-# Intelligence Workflow
-
-Drone Video Stream
-
-            ↓
-
-AI Detection Pipeline
-
-            ↓
-
-Object Tracking Engine
-
-            ↓
-
-Threat Classification
-
-            ↓
-
-Behavior Analysis
-
-            ↓
-
-Geospatial Correlation
-
-            ↓
-
-Spatial Database Storage
-
-            ↓
-
-GeoServer Layer Processing
-
-            ↓
-
-Command Center Visualization
-
-            ↓
-
-Real-Time Alert Generation
-
----
-
-# Deployment Architecture
-
-Drone Fleet
-
-            ↓
-
-PX4 Flight Controller
-
-            ↓
-
-ROS2 Middleware
-
-            ↓
-
-AI Inference Cluster
-
-            ↓
-
-GPU Processing Engine
-
-            ↓
-
-PostGIS Spatial Database Cluster
-
-            ↓
-
-GeoServer Tile Engine
-
-            ↓
-
-React Tactical Dashboard
-
-            ↓
-
-Central Command Center
-
----
-
-# Vision
-
-To build an autonomous intelligence platform capable of supporting surveillance, security operations, environmental monitoring, tactical defense systems, and large-scale geospatial intelligence operations.
-
----
-
-AEGIS GEOINT  
-Advanced Autonomous Intelligence Platform
+ISC
