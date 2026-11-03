@@ -73,7 +73,7 @@ const DroneFleet = () => {
             threatLevel: d.threat_level || 'LOW',
             confidence: d.confidence_score || 0.85,
             sector: d.sector || 'Unknown',
-            image: `https://picsum.photos/seed/${d.drone_id || d.id || index}/200/150`,
+            image: ['https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=800&auto=format&fit=crop' 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=800&auto=format&fit=crop' 'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?q=80&w=800&auto=format&fit=crop' 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?q=80&w=800&auto=format&fit=crop' 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=800&auto=format&fit=crop',
             lastMaintenance: Math.floor(Math.random() * 30 + 1) + ' days ago',
             firmware: 'v' + (Math.floor(Math.random() * 2 + 3)) + '.' + (Math.floor(Math.random() * 5)) + '.' + (Math.floor(Math.random() * 10)),
             totalFlights: Math.floor(Math.random() * 500 + 100)
@@ -127,7 +127,7 @@ const DroneFleet = () => {
       lastMaintenance: `${Math.floor(Math.random() * 30 + 1)} days ago`,
       firmware: `v${Math.floor(Math.random() * 2 + 3)}.${Math.floor(Math.random() * 5)}.${Math.floor(Math.random() * 10)}`,
       totalFlights: Math.floor(Math.random() * 500 + 100),
-      image: `https://picsum.photos/seed/${i}/200/150`,
+      image: ['https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=800&auto=format&fit=crop' 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=800&auto=format&fit=crop' 'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?q=80&w=800&auto=format&fit=crop' 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?q=80&w=800&auto=format&fit=crop' 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=800&auto=format&fit=crop',
       threatLevel: ['LOW', 'MEDIUM', 'HIGH'][Math.floor(Math.random() * 3)],
       confidence: 0.7 + Math.random() * 0.25,
       sector: ['Sector Alpha', 'Sector Bravo', 'Sector Charlie'][Math.floor(Math.random() * 3)]
@@ -429,3 +429,4 @@ const DroneFleet = () => {
 };
 
 export default DroneFleet;
+
