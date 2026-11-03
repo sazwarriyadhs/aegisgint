@@ -2,10 +2,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Camera, Thermometer, Activity, Download, Upload, RefreshCw,
-  Eye, Crosshair, Clock, Zap, Play, Target, ShieldAlert, Users
+  Eye, Crosshair, Clock, Zap, Play, Target, ShieldAlert, Users, Flame, Lock
 } from 'lucide-react';
 
-const SAMPLE_IMAGE = '/papua_drone_sample.jpg';
+const API_URL = 'http://localhost:8000';
+const SAMPLE_IMAGE = 'https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=1920&auto=format&fit=crop';
 
 const WEAPON_TYPES = [
   { class: 'Assault Rifle', color: '#ef4444' },
@@ -22,59 +23,45 @@ const AIDetection = () => {
   const [history, setHistory] = useState([]);
   const [previewImage, setPreviewImage] = useState(SAMPLE_IMAGE);
   const [isAutoMode, setIsAutoMode] = useState(true);
-  const [isTracking, setIsTracking] = useState(false);
-  const [trackingTarget, setTrackingTarget] = useState(null);
-  const [droneDistance, setDroneDistance] = useState(0);
   const [scanEffect, setScanEffect] = useState(false);
   const [detections, setDetections] = useState([]);
+  
+  // State Auto-Track
+  const [isTracking, setIsTracking] = useState(false);
+  const [trackingTargetId, setTrackingTargetId] = useState(null);
+  const [droneDistance, setDroneDistance] = useState(1500);
+
   const fileInputRef = useRef(null);
   const audioCtxRef = useRef(null);
 
-  // Audio Beep Function
   const playBeep = () => {
     try {
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      }
+      if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
       const ctx = audioCtxRef.current;
       if (ctx.state === 'suspended') ctx.resume();
-      
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      const osc = ctx.createOscillator(); const gain = ctx.createGain();
+      osc.type = 'square'; osc.frequency.setValueAtTime(880, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.15);
       gain.gain.setValueAtTime(0.1, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.2);
-    } catch (e) {
-      console.warn('Audio error:', e);
-    }
+      osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.2);
+    } catch (e) {}
   };
 
-  // AUTO SIMULATION LOOP
   useEffect(() => {
     if (!isAutoMode) {
       setMovement({ status: 'IDLE', count: 0, weapons: 0, lastEvent: movement.lastEvent });
-      setScanEffect(false);
-      setDetections([]);
-      return;
+      setScanEffect(false); setDetections([]); return;
     }
 
     let isCancelled = false;
 
     const runCycle = () => {
       if (isCancelled) return;
-
-      // 1. Start Scanning
       setScanEffect(true);
       setMovement(prev => ({ ...prev, status: 'SCANNING' }));
       setDetections([]);
 
-      // 2. After 2.5s, Detected
       setTimeout(() => {
         if (isCancelled) return;
         setScanEffect(false);
@@ -86,17 +73,21 @@ const AIDetection = () => {
         let shouldBeep = false;
 
         for (let i = 0; i < personCount; i++) {
-          const px = 15 + (i * 20) + (Math.random() * 10);
-          const py = 30 + (Math.random() * 30);
-          const pw = 12 + (Math.random() * 5);
-          const ph = 25 + (Math.random() * 10);
+          const px = 10 + (i * 22) + (Math.random() * 5);
+          const py = 30 + (Math.random() * 20);
+          const pw = 15 + (Math.random() * 5);
+          const ph = 30 + (Math.random() * 10);
+          
+          const bodyTemp = (36.0 + Math.random() * 3.5).toFixed(1);
+          const isFever = bodyTemp > 38.0;
 
           newDets.push({
             id: `p-${Date.now()}-${i}`, class: 'Person', confidence: (85 + Math.random() * 14).toFixed(1),
-            color: '#22c55e', x: px, y: py, w: pw, h: ph, temp: (34 + Math.random() * 3).toFixed(1)
+            color: isFever ? '#ef4444' : '#22c55e',
+            x: px, y: py, w: pw, h: ph, temp: bodyTemp, status: isFever ? 'FEVER' : 'NORMAL'
           });
 
-          if (Math.random() > 0.2) {
+          if (Math.random() > 0.3) {
             const weapon = WEAPON_TYPES[Math.floor(Math.random() * WEAPON_TYPES.length)];
             currentWeapons.push(weapon.class);
             shouldBeep = true;
@@ -108,28 +99,25 @@ const AIDetection = () => {
         }
 
         setDetections(newDets);
-
-        // LOGIKA AUTO-TRACKING
-        if (isTracking) {
-          // Pilih target pertama yang terdeteksi sebagai 'drone lock'
-          const primaryTarget = newDets.find(d => d.class === 'Person');
-          if (primaryTarget) {
-            setTrackingTarget(primaryTarget);
-            // Simulasi jarak drone makin deket
-            setDroneDistance(prev => Math.max(50, prev - Math.random() * 100));
-          }
-        }
         setMovement({ status: 'DETECTED', count: personCount, weapons: currentWeapons.length, lastEvent: now.toLocaleTimeString() });
 
-        const minT = (30 + Math.random() * 2).toFixed(1);
-        const maxT = (37 + Math.random() * 3).toFixed(1);
-        setThermal({ mode: 'simulation', anomalies: currentWeapons.length > 2 ? 1 : 0, objects: [{ temperature: { min: minT, max: maxT, avg: ((+minT + +maxT) / 2).toFixed(1) } }] });
+        // Auto-Tracking Logic
+        if (isTracking) {
+          const target = newDets.find(d => d.class === 'Person');
+          if (target) {
+            setTrackingTargetId(target.id);
+            setDroneDistance(prev => Math.max(100, prev - (Math.random() * 300 + 100))); // Distance decreases
+          }
+        }
+
+        const avgTemp = (newDets.reduce((acc, curr) => acc + (curr.temp ? parseFloat(curr.temp) : 0), 0) / personCount).toFixed(1);
+        setThermal({ mode: 'simulation', anomalies: newDets.filter(d => d.status === 'FEVER').length, objects: [{ temperature: { avg: avgTemp } }] });
 
         if (shouldBeep) playBeep();
 
         const newCapture = {
           id: Date.now(), personCount, weaponCount: currentWeapons.length,
-          weapons: [...new Set(currentWeapons)].join(', '), timestamp: now.toISOString(), status: 'RECORDED'
+          weapons: [...new Set(currentWeapons)].join(', '), timestamp: now.toISOString(), status: 'RECORDED', avgTemp
         };
         setCaptures(prev => [newCapture, ...prev].slice(0, 4));
         
@@ -138,26 +126,19 @@ const AIDetection = () => {
           size_kb: (600 + Math.random() * 100).toFixed(1), weapons: currentWeapons.length
         }, ...prev].slice(0, 10));
 
-        // 3. Back to idle after 4s, then loop
         setTimeout(() => {
           if (isCancelled) return;
           setMovement(prev => ({ ...prev, status: 'IDLE' }));
-          setDetections([]);
-          // Start next cycle after 2s idle
+          setDetections([]); setTrackingTargetId(null);
           setTimeout(runCycle, 2000);
         }, 4000);
 
       }, 2500);
     };
 
-    // Start first cycle
     const initialTimer = setTimeout(runCycle, 1000);
-
-    return () => {
-      isCancelled = true;
-      clearTimeout(initialTimer);
-    };
-  }, [isAutoMode]);
+    return () => { isCancelled = true; clearTimeout(initialTimer); };
+  }, [isAutoMode, isTracking]); // Dependency added so tracking state is fresh
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
@@ -197,8 +178,8 @@ const AIDetection = () => {
     btn: (color) => ({ padding: '8px 16px', background: `${color}20`, color, border: `1px solid ${color}`, borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }),
     fileInput: { display: 'none' },
     scanLine: { position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: '#ef4444', boxShadow: '0 0 15px #ef4444', zIndex: 20, animation: 'scan 1s linear infinite' },
-    bbox: (color) => ({ position: 'absolute', border: `2px solid ${color}`, background: `${color}20`, zIndex: 15 }),
-    bboxLabel: (color) => ({ position: 'absolute', top: '-18px', left: '-2px', background: color, color: 'white', fontSize: '10px', padding: '1px 4px', whiteSpace: 'nowrap', fontWeight: 'bold' })
+    bbox: (color, isTrackingTarget) => ({ position: 'absolute', border: `2px solid ${isTrackingTarget ? '#eab308' : color}`, background: `${color}20`, zIndex: 15, boxShadow: isTrackingTarget ? '0 0 15px #eab308' : 'none', transition: 'all 0.2s' }),
+    bboxLabel: (color, isTrackingTarget) => ({ position: 'absolute', top: '-18px', left: '-2px', background: isTrackingTarget ? '#eab308' : color, color: isTrackingTarget ? '#000' : '#fff', fontSize: '10px', padding: '1px 4px', whiteSpace: 'nowrap', fontWeight: 'bold' })
   };
 
   return (
@@ -210,7 +191,7 @@ const AIDetection = () => {
 
       <div style={st.header}>
         <h1 style={st.title}>AI DETECTION CONSOLE</h1>
-        <p style={st.subtitle}>Tropical UAV Intelligence • Weapon & Threat Analysis</p>
+        <p style={st.subtitle}>Weapon & Body Temperature Analysis</p>
         <div style={st.autoBadge}>
           <ShieldAlert size={14} /> {isAutoMode ? 'AUTO-SCANNING ACTIVE' : 'MANUAL MODE'}
         </div>
@@ -219,14 +200,14 @@ const AIDetection = () => {
       <div style={st.panel}>
         <div style={st.panelTitle}>
           <Target size={14} /> Live Feed Analysis 
-          {isTracking && <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#22c55e', display: 'flex', alignItems: 'center', gap: '4px', animation: 'blink-red 1s infinite' }}>● TARGET LOCKED (DIST: {Math.round(droneDistance)}m)</span>}
+          {isTracking && <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#eab308', display: 'flex', alignItems: 'center', gap: '4px' }}><Lock size={12}/> TARGET LOCKED (DIST: {Math.round(droneDistance)}m)</span>}
         </div>
         <div style={{ marginBottom: '12px' }}>
           <button 
-            style={{ padding: '6px 12px', background: isTracking ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)', color: isTracking ? '#22c55e' : '#8899aa', border: '1px solid ' + (isTracking ? '#22c55e' : 'rgba(255,255,255,0.1)'), borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 700 }}
+            style={{ ...st.btn(isTracking ? '#eab308' : '#8899aa'), background: isTracking ? 'rgba(234,179,8,0.2)' : 'transparent' }}
             onClick={() => setIsTracking(!isTracking)}
           >
-            {isTracking ? '🛑 Stop Auto-Track' : '🎯 Start Auto-Track (Drone AI)'}
+            <Crosshair size={14} /> {isTracking ? 'STOP AUTO-TRACK' : 'START AUTO-TRACK (DRONE AI)'}
           </button>
         </div>
         <div style={st.grid2}>
@@ -237,15 +218,16 @@ const AIDetection = () => {
               {previewImage ? (
                 <>
                   <img src={previewImage} alt="RGB" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
-                  <div key={det.id} style={{ 
-                      ...st.bbox(isTracking && trackingTarget?.id === det.id ? '#eab308' : det.color), 
-                      left: \\%\, top: \\%\, width: \\%\, height: \\%\,
-                      boxShadow: isTracking && trackingTarget?.id === det.id ? '0 0 20px #eab308' : 'none',
-                      transition: 'all 0.2s'
-                    }}>
-                      <span style={st.bboxLabel(det.color)}>{det.class} {det.confidence}% {det.temp ? `| ${det.temp}°C (${det.status})` : ""}</span>
-                    </div>
-                  ))}
+                  {detections.map(det => {
+                    const isTarget = isTracking && trackingTargetId === det.id;
+                    return (
+                      <div key={det.id} style={{ ...st.bbox(det.color, isTarget), left: `${det.x}%`, top: `${det.y}%`, width: `${det.w}%`, height: `${det.h}%` }}>
+                        <span style={st.bboxLabel(det.color, isTarget)}>
+                          {isTarget && '🔒 '} {det.class} {det.confidence}% {det.temp ? `| ${det.temp}°C` : ''}
+                        </span>
+                      </div>
+                    );
+                  })}
                   {movement.status === 'SCANNING' && (
                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(239,68,68,0.1)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <div style={{ color: '#ef4444', fontSize: '14px', fontWeight: 'bold', letterSpacing: '2px', animation: 'blink-red 1s infinite' }}>ANALYZING...</div>
@@ -256,7 +238,7 @@ const AIDetection = () => {
             </div>
             <div style={st.camStatus}>
               <span>Status: <strong style={{ color: scanEffect ? '#ef4444' : '#22c55e' }}>{scanEffect ? 'SCANNING' : movement.status}</strong></span>
-              <span>Model: YOLOv8-Weapon</span>
+              <span>Model: YOLOv8 + Thermal</span>
             </div>
           </div>
 
@@ -267,11 +249,14 @@ const AIDetection = () => {
               {previewImage ? (
                 <>
                   <img src={previewImage} alt="Thermal" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'hue-rotate(180deg) saturate(3) contrast(1.5) brightness(0.8)' }} />
-                  {detections.filter(d => d.class === 'Person').map(det => (
-                    <div key={`t-${det.id}`} style={{ ...st.bbox('#4fc3f7'), left: `${det.x}%`, top: `${det.y}%`, width: `${det.w}%`, height: `${det.h}%` }}>
-                      <span style={{...st.bboxLabel('#4fc3f7'), color: '#0a0e1a'}}>{det.temp}°C</span>
-                    </div>
-                  ))}
+                  {detections.filter(d => d.class === 'Person').map(det => {
+                    const isTarget = isTracking && trackingTargetId === det.id;
+                    return (
+                      <div key={`t-${det.id}`} style={{ ...st.bbox(det.color, isTarget), left: `${det.x}%`, top: `${det.y}%`, width: `${det.w}%`, height: `${det.h}%` }}>
+                        <span style={{...st.bboxLabel(det.color, isTarget)}}>{det.temp}°C</span>
+                      </div>
+                    );
+                  })}
                 </>
               ) : <div style={{ color: '#444', fontSize: '12px' }}>No Signal</div>}
             </div>
@@ -314,6 +299,7 @@ const AIDetection = () => {
                 <div style={st.captureImg}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Users size={14} /> {cap.personCount} Personnel</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px', color: '#f59e0b' }}><Target size={14} /> {cap.weaponCount} Weapons</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px', color: '#ef4444' }}><Thermometer size={14} /> Avg: {cap.avgTemp}°C</div>
                   {i === 0 && <div style={{ position: 'absolute', inset: 0, border: '2px solid #ef4444', animation: 'blink-red 2s infinite' }}></div>}
                 </div>
                 <div style={st.captureInfo}>
@@ -332,8 +318,11 @@ const AIDetection = () => {
         <div style={st.panelTitle}><Thermometer size={14} /> Thermal Analysis</div>
         <div style={st.thermalGrid}>
           <div style={st.thermalCard}><div style={st.thermalLabel}>Minimum</div><div style={st.thermalValue}>{thermal?.objects?.[0]?.temperature?.min || '--.-'} °C</div></div>
-          <div style={st.thermalCard}><div style={st.thermalLabel}>Average</div><div style={st.thermalValue}>{thermal?.objects?.[0]?.temperature?.avg || '--.-'} °C</div></div>
+          <div style={st.thermalCard}><div style={st.thermalLabel}>Average (Body)</div><div style={st.thermalValue}>{thermal?.objects?.[0]?.temperature?.avg || '--.-'} °C</div></div>
           <div style={st.thermalCard}><div style={st.thermalLabel}>Maximum</div><div style={st.thermalValue}>{thermal?.objects?.[0]?.temperature?.max || '--.-'} °C</div></div>
+        </div>
+        <div style={{ marginTop: '12px', fontSize: '11px', color: thermal?.anomalies > 0 ? '#ef4444' : '#22c55e', fontWeight: 'bold' }}>
+          {thermal?.anomalies > 0 ? `⚠️ ${thermal.anomalies} FEVER SUSPECT DETECTED` : '✅ ALL PERSONNEL NORMAL TEMP'}
         </div>
       </div>
 
@@ -362,5 +351,4 @@ const AIDetection = () => {
 };
 
 export default AIDetection;
-
 
